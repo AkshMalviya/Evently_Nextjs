@@ -35,16 +35,13 @@ export const deleteUser = async (clerkId: string) => {
         const userToDelete = await User.findOne({ clerkId })
         if (!userToDelete) throw new Error("User Not Found")
 
-        await Promise.all(
+        await Promise.all([
             Event.updateMany(
                 { _id: { $in: userToDelete.events } },
                 { $pull: { organizer: userToDelete._id } }
             ),
-            Order.updateMany(
-                { _id: { $in: userToDelete.orders } },
-                { $unset: { buyer: 1 } }
-            )
-        )
+            Order.updateMany({ _id: { $in: userToDelete.orders } }, { $unset: { buyer: 1 } })
+        ])
         const deletedUser = await User.findByIdAndDelete(userToDelete._id)
         revalidatePath("/")
 
